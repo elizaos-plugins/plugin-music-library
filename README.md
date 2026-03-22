@@ -1,6 +1,6 @@
 # @elizaos/plugin-music-library
 
-A comprehensive plugin for ElizaOS that provides music data storage, user preferences, analytics, external music metadata APIs, and YouTube search functionality.
+A comprehensive plugin for elizaOS that provides music data storage, user preferences, analytics, external music metadata APIs, and YouTube search functionality.
 
 ## Features
 
@@ -51,7 +51,7 @@ A comprehensive plugin for ElizaOS that provides music data storage, user prefer
 
 ## Installation
 
-As this is a workspace package, it's installed as part of the ElizaOS monorepo:
+As this is a workspace package, it's installed as part of the elizaOS monorepo:
 
 ```bash
 bun install
