@@ -125,6 +125,18 @@ const musicLibraryPlugin: Plugin = {
     downloadMusic, // New: Smart download action
     addToPlaylist, // New: Smart add to playlist action
   ],
+  // Self-declared auto-enable: activate when any of the music service API
+  // keys are present. The hardcoded AUTH_PROVIDER_PLUGINS map still serves
+  // as fallback.
+  autoEnable: {
+    envKeys: [
+      "LASTFM_API_KEY",
+      "GENIUS_API_KEY",
+      "THEAUDIODB_API_KEY",
+      "SPOTIFY_CLIENT_ID",
+      "SPOTIFY_CLIENT_SECRET",
+    ],
+  },
   init: async (_config: Record<string, string>, _runtime: IAgentRuntime) => {
     logger.debug(
       "Music Library plugin initialized with metadata APIs, playlists, analytics, and YouTube search",
