@@ -42,8 +42,7 @@
     "test:live": "bun run test:e2e"
   },
   "peerDependencies": {
-    "whatwg-url": "7.1.0",
-    "@elizaos/plugin-music-player": "workspace:*"
+    "whatwg-url": "7.1.0"
   },
   "publishConfig": {
     "access": "public"
