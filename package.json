@@ -21,7 +21,8 @@
     "@vookav2/play-dl": "^1.9.9",
     "@elizaos/core": "workspace:*",
     "@elizaos/plugin-sql": "workspace:*",
-    "buffer": "^6.0.3"
+    "buffer": "^6.0.3",
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
     "@types/node": "^20.14.9",
