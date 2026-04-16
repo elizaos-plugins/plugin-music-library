@@ -28,13 +28,14 @@
     "@types/node": "^20.14.9",
     "prettier": "3.5.3",
     "tsup": "8.4.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "3.2.4"
   },
   "scripts": {
     "build": "tsup",
     "prepare": "tsup",
     "dev": "tsup --watch",
-    "test": "elizaos test",
+    "test": "vitest run",
     "lint": "prettier --write ./src",
     "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
     "format": "prettier --write ./src",
