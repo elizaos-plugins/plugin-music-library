@@ -17,6 +17,7 @@ type MusicInfoItem =
 export const musicInfoProvider: Provider = {
   name: "MUSIC_INFO",
   description: "Provides information about tracks, artists, and albums",
+  descriptionCompressed: "Track, artist, album info.",
   position: 10, // Position after basic providers but before complex ones
 
   get: async (runtime: IAgentRuntime, message: Memory, _state: State) => {

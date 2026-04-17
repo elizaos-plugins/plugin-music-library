@@ -37,6 +37,7 @@ export const savePlaylist: Action = {
   ],
   description:
     "Save the current music queue as a playlist for the user. Works best in DMs to avoid flooding group chats.",
+  descriptionCompressed: "Save current queue as playlist.",
   validate: async (
     _runtime: IAgentRuntime,
     message: Memory,

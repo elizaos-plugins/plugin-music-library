@@ -23,6 +23,7 @@ export const deletePlaylist: Action = {
   ],
   description:
     "Delete a saved playlist. Works best in DMs to avoid flooding group chats.",
+  descriptionCompressed: "Delete saved playlist.",
   validate: async (
     _runtime: IAgentRuntime,
     message: Memory,

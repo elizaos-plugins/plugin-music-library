@@ -26,6 +26,7 @@ export const addToPlaylist: Action = {
   ],
   description:
     "Add music to a playlist. If the track is not already in the library, the configured music fetch service must resolve it first. Creates the playlist if it does not exist.",
+  descriptionCompressed: "Add track to playlist. Creates playlist if missing. Fetches track if not in library.",
   validate: async (
     _runtime: IAgentRuntime,
     _message: Memory,

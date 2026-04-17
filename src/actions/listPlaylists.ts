@@ -24,6 +24,7 @@ export const listPlaylists: Action = {
   ],
   description:
     "List all saved playlists for the user. Works best in DMs to avoid flooding group chats.",
+  descriptionCompressed: "List all saved playlists.",
   validate: async (
     _runtime: IAgentRuntime,
     message: Memory,

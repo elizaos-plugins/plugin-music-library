@@ -52,6 +52,7 @@ export const searchYouTube: Action = {
   ],
   description:
     "Search YouTube for a song or video and return the link. Use this when a user asks to find or search for a YouTube video or song without providing a specific URL.",
+  descriptionCompressed: "Search YouTube for song/video, return link.",
   validate: async (_runtime: IAgentRuntime, message: Memory, _state: State) => {
     const messageText = message.content.text || "";
     const searchQuery = extractSearchQuery(messageText);

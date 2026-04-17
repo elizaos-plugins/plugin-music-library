@@ -8,6 +8,7 @@ export const musicInfoInstructionsProvider: Provider = {
   name: "MUSIC_INFO_INSTRUCTIONS",
   description:
     "Provides comprehensive music metadata and research capabilities documentation",
+  descriptionCompressed: "Music metadata and research capabilities docs.",
   position: 5, // Early position for capability awareness
 
   get: async (runtime: IAgentRuntime, message: Memory, _state: State) => {

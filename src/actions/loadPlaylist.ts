@@ -37,6 +37,7 @@ export const loadPlaylist: Action = {
   ],
   description:
     "Load a saved playlist and add all tracks to the queue. Works best in DMs to avoid flooding group chats.",
+  descriptionCompressed: "Load saved playlist, add tracks to queue.",
   validate: async (
     _runtime: IAgentRuntime,
     message: Memory,

@@ -26,6 +26,7 @@ export const downloadMusic: Action = {
   ],
   description:
     "Download music to the local library without playing it. Requires the configured music fetch service to resolve the track.",
+  descriptionCompressed: "Download track to library without playing.",
   validate: async (
     _runtime: IAgentRuntime,
     _message: Memory,

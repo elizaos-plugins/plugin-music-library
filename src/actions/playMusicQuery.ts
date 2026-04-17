@@ -486,6 +486,7 @@ export const playMusicQuery: Action = {
   ],
   description:
     "Handle any complex music query that requires understanding and research. Supports: artist queries (first single, latest song, similar artists, popular songs, nth album), temporal (80s, 90s, specific years), genre/mood/vibe, activities (workout, study, party), charts/trending, albums, movie/game/TV soundtracks, lyrics/topics, versions (covers, remixes, acoustic, live), and more. Uses Wikipedia, music databases, and web search to find the right music.",
+  descriptionCompressed: "Complex music search: artist, genre, mood, era, activity, charts, soundtracks, versions. Uses web search + databases.",
   validate: async (_runtime: IAgentRuntime, message: Memory, _state: State) => {
     if (message.content.source !== "discord") {
       return false;

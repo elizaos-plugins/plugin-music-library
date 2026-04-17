@@ -17,6 +17,7 @@ export const wikipediaProvider: Provider = {
   name: "WIKIPEDIA_MUSIC",
   description:
     "Provides music information extracted from Wikipedia using LLM-based parsing",
+  descriptionCompressed: "Music info from Wikipedia via LLM parsing.",
   position: 11, // After basic music info provider
 
   get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
