@@ -19,8 +19,8 @@
   ],
   "dependencies": {
     "@vookav2/play-dl": "^1.9.9",
-    "@elizaos/core": "2.0.0-alpha.173",
-    "@elizaos/plugin-sql": "2.0.0-alpha.19",
+    "@elizaos/core": "alpha",
+    "@elizaos/plugin-sql": "alpha",
     "buffer": "^6.0.3",
     "uuid": "^11.0.5"
   },
