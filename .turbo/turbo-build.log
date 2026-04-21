@@ -1,11 +1,11 @@
 $ tsup
 CLI Building entry: src/index.ts
 CLI Using tsconfig: tsconfig.build.json
-CLI tsup v8.5.1
+CLI tsup v8.4.0
 CLI Using tsup config: /Users/shawwalters/eliza-workspace/milady/eliza/plugins/plugin-music-library/tsup.config.ts
 CLI Target: esnext
 CLI Cleaning output folder
 ESM Build start
-ESM dist/index.js     213.13 KB
+ESM dist/index.js     213.15 KB
 ESM dist/index.js.map 415.46 KB
-ESM ⚡️ Build success in 654ms
+ESM ⚡️ Build success in 3823ms
