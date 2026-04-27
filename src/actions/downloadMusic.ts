@@ -48,7 +48,7 @@ export const downloadMusic: Action = {
     runtime: IAgentRuntime,
     message: Memory,
     _state: State,
-    options: Record<string, unknown>,
+    options: Record<string, unknown> | undefined,
     callback: HandlerCallback,
   ): Promise<ActionResult | undefined> => {
     const messageText = message.content.text || "";
