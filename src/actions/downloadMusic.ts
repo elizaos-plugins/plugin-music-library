@@ -1,6 +1,7 @@
 import {
   type Action,
   type ActionExample,
+  type ActionResult,
   type HandlerCallback,
   type IAgentRuntime,
   logger,
@@ -11,6 +12,7 @@ import {
   getSmartMusicFetchService,
   type MusicFetchProgress,
 } from "../utils/smartFetchService";
+import { confirmationRequired, isConfirmed } from "./confirmation";
 
 /**
  * DOWNLOAD_MUSIC action - downloads music to library without playing
@@ -25,8 +27,16 @@ export const downloadMusic: Action = {
     "GRAB_MUSIC",
   ],
   description:
-    "Download music to the local library without playing it. Requires the configured music fetch service to resolve the track.",
+    "Download music to the local library without playing it. Requires confirmed:true before fetching and saving.",
   descriptionCompressed: "Download track to library without playing.",
+  parameters: [
+    {
+      name: "confirmed",
+      description: "Must be true to download music after preview.",
+      required: false,
+      schema: { type: "boolean", default: false },
+    },
+  ],
   validate: async (
     _runtime: IAgentRuntime,
     _message: Memory,
@@ -38,9 +48,9 @@ export const downloadMusic: Action = {
     runtime: IAgentRuntime,
     message: Memory,
     _state: State,
-    _options: Record<string, unknown>,
+    options: Record<string, unknown>,
     callback: HandlerCallback,
-  ) => {
+  ): Promise<ActionResult | undefined> => {
     const messageText = message.content.text || "";
     const query = messageText.trim();
 
@@ -50,6 +60,15 @@ export const downloadMusic: Action = {
         source: message.content.source,
       });
       return;
+    }
+
+    const preview = `Confirmation required before downloading music to the library: "${query}".`;
+    if (!isConfirmed(options)) {
+      await callback({
+        text: preview,
+        source: message.content.source,
+      });
+      return confirmationRequired(preview, { query });
     }
 
     try {
@@ -127,9 +146,9 @@ export const downloadMusic: Action = {
 
       await callback({
         text: responseText,
-        actions: ["DOWNLOAD_MUSIC_RESPONSE"],
         source: message.content.source,
       });
+      return { success: true, text: responseText };
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -139,6 +158,7 @@ export const downloadMusic: Action = {
         text: `I encountered an error while trying to download "${query}". ${errorMessage}`,
         source: message.content.source,
       });
+      return { success: false, error: errorMessage };
     }
   },
   examples: [

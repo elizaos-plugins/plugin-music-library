@@ -11,6 +11,7 @@ import {
   type UUID,
 } from "@elizaos/core";
 import type { MusicLibraryService } from "../services/musicLibraryService";
+import { confirmationRequired, isConfirmed } from "./confirmation";
 
 const MUSIC_LIBRARY_SERVICE_NAME = "musicLibrary";
 
@@ -22,8 +23,16 @@ export const deletePlaylist: Action = {
     "REMOVE_SAVED_PLAYLIST",
   ],
   description:
-    "Delete a saved playlist. Works best in DMs to avoid flooding group chats.",
+    "Delete a saved playlist after confirmed:true. Works best in DMs to avoid flooding group chats.",
   descriptionCompressed: "Delete saved playlist.",
+  parameters: [
+    {
+      name: "confirmed",
+      description: "Must be true to delete the saved playlist after preview.",
+      required: false,
+      schema: { type: "boolean", default: false },
+    },
+  ],
   validate: async (
     _runtime: IAgentRuntime,
     message: Memory,
@@ -39,7 +48,7 @@ export const deletePlaylist: Action = {
     runtime: IAgentRuntime,
     message: Memory,
     state?: State,
-    _options?: Record<string, unknown>,
+    options?: Record<string, unknown>,
     callback?: HandlerCallback,
   ): Promise<ActionResult | undefined> => {
     if (!callback) {
@@ -117,6 +126,19 @@ export const deletePlaylist: Action = {
           source: message.content.source,
         });
         return { success: false, error: "Playlist not found" };
+      }
+
+      const preview = `Confirmation required before deleting playlist "${selectedPlaylist.name}" (${selectedPlaylist.tracks.length} track${selectedPlaylist.tracks.length !== 1 ? "s" : ""}).`;
+      if (!isConfirmed(options)) {
+        await callback({
+          text: preview,
+          source: message.content.source,
+        });
+        return confirmationRequired(preview, {
+          playlistId: selectedPlaylist.id,
+          playlistName: selectedPlaylist.name,
+          trackCount: selectedPlaylist.tracks.length,
+        });
       }
 
       const deleted = await musicLibrary.deletePlaylist(

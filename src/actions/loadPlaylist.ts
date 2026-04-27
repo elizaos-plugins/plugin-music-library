@@ -11,6 +11,7 @@ import {
   type UUID,
 } from "@elizaos/core";
 import type { MusicLibraryService } from "../services/musicLibraryService";
+import { confirmationRequired, isConfirmed } from "./confirmation";
 
 interface MusicQueueService {
   addTrack(
@@ -36,8 +37,16 @@ export const loadPlaylist: Action = {
     "PLAY_SAVED_PLAYLIST",
   ],
   description:
-    "Load a saved playlist and add all tracks to the queue. Works best in DMs to avoid flooding group chats.",
+    "Load a saved playlist and add all tracks to the queue after confirmed:true. Works best in DMs to avoid flooding group chats.",
   descriptionCompressed: "Load saved playlist, add tracks to queue.",
+  parameters: [
+    {
+      name: "confirmed",
+      description: "Must be true to add the playlist tracks to the queue.",
+      required: false,
+      schema: { type: "boolean", default: false },
+    },
+  ],
   validate: async (
     _runtime: IAgentRuntime,
     message: Memory,
@@ -53,7 +62,7 @@ export const loadPlaylist: Action = {
     runtime: IAgentRuntime,
     message: Memory,
     state?: State,
-    _options?: Record<string, unknown>,
+    options?: Record<string, unknown>,
     callback?: HandlerCallback,
   ): Promise<ActionResult | undefined> => {
     if (!callback) {
@@ -147,6 +156,19 @@ export const loadPlaylist: Action = {
         selectedPlaylist = [...playlists].sort(
           (a, b) => b.updatedAt - a.updatedAt,
         )[0];
+      }
+
+      const preview = `Confirmation required before loading playlist "${selectedPlaylist.name}" and adding ${selectedPlaylist.tracks.length} track${selectedPlaylist.tracks.length !== 1 ? "s" : ""} to the queue.`;
+      if (!isConfirmed(options)) {
+        await callback({
+          text: preview,
+          source: message.content.source,
+        });
+        return confirmationRequired(preview, {
+          playlistId: selectedPlaylist.id,
+          playlistName: selectedPlaylist.name,
+          trackCount: selectedPlaylist.tracks.length,
+        });
       }
 
       for (const track of selectedPlaylist.tracks) {

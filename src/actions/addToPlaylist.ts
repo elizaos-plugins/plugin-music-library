@@ -1,6 +1,7 @@
 import {
   type Action,
   type ActionExample,
+  type ActionResult,
   type HandlerCallback,
   type IAgentRuntime,
   logger,
@@ -12,6 +13,7 @@ import {
   getSmartMusicFetchService,
   type MusicFetchProgress,
 } from "../utils/smartFetchService";
+import { confirmationRequired, isConfirmed } from "./confirmation";
 
 /**
  * ADD_TO_PLAYLIST action - fetch music and add it to a playlist
@@ -25,9 +27,17 @@ export const addToPlaylist: Action = {
     "ADD_TRACK_TO_PLAYLIST",
   ],
   description:
-    "Add music to a playlist. If the track is not already in the library, the configured music fetch service must resolve it first. Creates the playlist if it does not exist.",
+    "Add music to a playlist after confirmed:true. If the track is not already in the library, the configured music fetch service must resolve it first. Creates the playlist if it does not exist.",
   descriptionCompressed:
     "Add track to playlist. Creates playlist if missing. Fetches track if not in library.",
+  parameters: [
+    {
+      name: "confirmed",
+      description: "Must be true to add music to the playlist after preview.",
+      required: false,
+      schema: { type: "boolean", default: false },
+    },
+  ],
   validate: async (
     _runtime: IAgentRuntime,
     _message: Memory,
@@ -39,13 +49,10 @@ export const addToPlaylist: Action = {
     runtime: IAgentRuntime,
     message: Memory,
     _state: State,
-    _options: Record<string, unknown>,
+    options: Record<string, unknown>,
     callback: HandlerCallback,
-  ) => {
+  ): Promise<ActionResult | undefined> => {
     const messageText = message.content.text || "";
-
-    // Parse message to extract song query and playlist name
-    // Expected patterns: "add [song] to [playlist]", "add [song] to playlist [name]", etc.
     const addToPattern = /add\s+(.+?)\s+to\s+(?:playlist\s+)?(.+)/i;
     const match = messageText.match(addToPattern);
 
@@ -54,7 +61,7 @@ export const addToPlaylist: Action = {
         text: 'Please specify what song to add and which playlist. Example: "add Bohemian Rhapsody to my favorites"',
         source: message.content.source,
       });
-      return;
+      return { success: false, error: "Missing song or playlist" };
     }
 
     const songQuery = match[1].trim();
@@ -65,7 +72,7 @@ export const addToPlaylist: Action = {
         text: "Please specify a song name (at least 3 characters).",
         source: message.content.source,
       });
-      return;
+      return { success: false, error: "Missing song name" };
     }
 
     if (!playlistName || playlistName.length < 2) {
@@ -73,7 +80,16 @@ export const addToPlaylist: Action = {
         text: "Please specify a playlist name (at least 2 characters).",
         source: message.content.source,
       });
-      return;
+      return { success: false, error: "Missing playlist name" };
+    }
+
+    const preview = `Confirmation required before adding "${songQuery}" to playlist "${playlistName}".`;
+    if (!isConfirmed(options)) {
+      await callback({
+        text: preview,
+        source: message.content.source,
+      });
+      return confirmationRequired(preview, { songQuery, playlistName });
     }
 
     try {
@@ -110,7 +126,7 @@ export const addToPlaylist: Action = {
           text: `Couldn't find or download "${songQuery}". ${result.error || "Please try a different search term."}`,
           source: message.content.source,
         });
-        return;
+        return { success: false, error: result.error || "Music not found" };
       }
 
       const existingPlaylists = await loadPlaylists(runtime, message.entityId);
@@ -152,38 +168,41 @@ export const addToPlaylist: Action = {
 
         await callback({
           text: responseText,
-          actions: ["ADD_TO_PLAYLIST_RESPONSE"],
           source: message.content.source,
         });
-      } else {
-        await callback({
-          text: `**${result.title || songQuery}** is already in playlist "${playlistName}"`,
-          source: message.content.source,
-        });
+
+        await runtime.createMemory(
+          {
+            entityId: message.entityId,
+            agentId: message.agentId,
+            roomId: message.roomId,
+            content: {
+              source: message.content.source,
+              thought: `Added ${result.title || songQuery} to playlist ${playlistName} (source: ${result.source})`,
+              actions: ["ADD_TO_PLAYLIST"],
+            },
+            metadata: {
+              type: "custom",
+              actionName: "ADD_TO_PLAYLIST",
+              audioUrl: result.url,
+              title: result.title || songQuery,
+              playlistName,
+              playlistId: targetPlaylist.id,
+              source: result.source,
+            },
+          },
+          "messages",
+        );
+
+        return { success: true, text: responseText };
       }
 
-      await runtime.createMemory(
-        {
-          entityId: message.entityId,
-          agentId: message.agentId,
-          roomId: message.roomId,
-          content: {
-            source: message.content.source,
-            thought: `Added ${result.title || songQuery} to playlist ${playlistName} (source: ${result.source})`,
-            actions: ["ADD_TO_PLAYLIST"],
-          },
-          metadata: {
-            type: "custom",
-            actionName: "ADD_TO_PLAYLIST",
-            audioUrl: result.url,
-            title: result.title || songQuery,
-            playlistName,
-            playlistId: targetPlaylist.id,
-            source: result.source,
-          },
-        },
-        "messages",
-      );
+      const responseText = `**${result.title || songQuery}** is already in playlist "${playlistName}"`;
+      await callback({
+        text: responseText,
+        source: message.content.source,
+      });
+      return { success: true, text: responseText };
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -193,6 +212,7 @@ export const addToPlaylist: Action = {
         text: `I encountered an error while trying to add "${songQuery}" to playlist "${playlistName}". ${errorMessage}`,
         source: message.content.source,
       });
+      return { success: false, error: errorMessage };
     }
   },
   examples: [

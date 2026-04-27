@@ -12,6 +12,7 @@ import {
 } from "@elizaos/core";
 import type { Playlist } from "../components/playlists";
 import type { MusicLibraryService } from "../services/musicLibraryService";
+import { confirmationRequired, isConfirmed } from "./confirmation";
 
 interface QueueTrack {
   url: string;
@@ -36,8 +37,16 @@ export const savePlaylist: Action = {
     "SAVE_MUSIC_LIST",
   ],
   description:
-    "Save the current music queue as a playlist for the user. Works best in DMs to avoid flooding group chats.",
+    "Save the current music queue as a playlist for the user after confirmed:true. Works best in DMs to avoid flooding group chats.",
   descriptionCompressed: "Save current queue as playlist.",
+  parameters: [
+    {
+      name: "confirmed",
+      description: "Must be true to save the current queue as a playlist.",
+      required: false,
+      schema: { type: "boolean", default: false },
+    },
+  ],
   validate: async (
     _runtime: IAgentRuntime,
     message: Memory,
@@ -53,7 +62,7 @@ export const savePlaylist: Action = {
     runtime: IAgentRuntime,
     message: Memory,
     state?: State,
-    _options?: Record<string, unknown>,
+    options?: Record<string, unknown>,
     callback?: HandlerCallback,
   ): Promise<ActionResult | undefined> => {
     if (!callback) {
@@ -142,6 +151,18 @@ export const savePlaylist: Action = {
         name: playlistName,
         tracks,
       };
+
+      const preview = `Confirmation required before saving playlist "${playlistName}" with ${tracks.length} track${tracks.length !== 1 ? "s" : ""}.`;
+      if (!isConfirmed(options)) {
+        await callback({
+          text: preview,
+          source: message.content.source,
+        });
+        return confirmationRequired(preview, {
+          playlistName,
+          trackCount: tracks.length,
+        });
+      }
 
       const savedPlaylist = await musicLibrary.savePlaylist(userId, playlist);
 

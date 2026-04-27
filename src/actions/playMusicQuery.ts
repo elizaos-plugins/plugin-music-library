@@ -1,6 +1,7 @@
 import {
   type Action,
   type ActionExample,
+  type ActionResult,
   type HandlerCallback,
   type IAgentRuntime,
   logger,
@@ -9,6 +10,7 @@ import {
   type State,
 } from "@elizaos/core";
 import type { YouTubeSearchService } from "../services/youtubeSearch";
+import { confirmationRequired, isConfirmed } from "./confirmation";
 
 interface MusicQueryIntent {
   needsResearch: boolean;
@@ -485,9 +487,18 @@ export const playMusicQuery: Action = {
     "INTELLIGENT_MUSIC_SEARCH",
   ],
   description:
-    "Handle any complex music query that requires understanding and research. Supports: artist queries (first single, latest song, similar artists, popular songs, nth album), temporal (80s, 90s, specific years), genre/mood/vibe, activities (workout, study, party), charts/trending, albums, movie/game/TV soundtracks, lyrics/topics, versions (covers, remixes, acoustic, live), and more. Uses Wikipedia, music databases, and web search to find the right music.",
+    "Handle any complex music query that requires understanding and research, then queue the selected track after confirmed:true. Supports: artist queries (first single, latest song, similar artists, popular songs, nth album), temporal (80s, 90s, specific years), genre/mood/vibe, activities (workout, study, party), charts/trending, albums, movie/game/TV soundtracks, lyrics/topics, versions (covers, remixes, acoustic, live), and more. Uses Wikipedia, music databases, and web search to find the right music.",
   descriptionCompressed:
     "Complex music search: artist, genre, mood, era, activity, charts, soundtracks, versions. Uses web search + databases.",
+  parameters: [
+    {
+      name: "confirmed",
+      description:
+        "Must be true to resolve the music query and add the result to the queue.",
+      required: false,
+      schema: { type: "boolean", default: false },
+    },
+  ],
   validate: async (_runtime: IAgentRuntime, message: Memory, _state: State) => {
     if (message.content.source !== "discord") {
       return false;
@@ -615,10 +626,18 @@ export const playMusicQuery: Action = {
     runtime: IAgentRuntime,
     message: Memory,
     state: State,
-    _options: Record<string, unknown>,
+    options: Record<string, unknown>,
     callback: HandlerCallback,
-  ) => {
+  ): Promise<ActionResult | undefined> => {
     const messageText = message.content.text || "";
+    const preview = `Confirmation required before resolving and queueing music for: "${messageText}".`;
+    if (!isConfirmed(options)) {
+      await callback({
+        text: preview,
+        source: message.content.source,
+      });
+      return confirmationRequired(preview, { query: messageText });
+    }
 
     try {
       // Step 1: Analyze the query intent
@@ -749,6 +768,7 @@ export const playMusicQuery: Action = {
         text: `🎵 Queued: **${topResult.title}**`,
         source: message.content.source,
       });
+      return { success: true, text: `Queued: ${topResult.title}` };
     } catch (error) {
       logger.error(
         "Error in playMusicQuery:",
@@ -758,6 +778,10 @@ export const playMusicQuery: Action = {
         text: "I ran into an issue trying to find that music.",
         source: message.content.source,
       });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
     }
   },
   examples: [
